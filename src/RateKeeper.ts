@@ -1,3 +1,5 @@
+const globalData: { [id: number]: LimitData } = {};
+
 class LimitData {
     readonly queue: (() => void)[] = [];
     timer: ReturnType<typeof setInterval> | null = null;
@@ -7,8 +9,6 @@ class LimitData {
         this.timer = null;
     }
 }
-
-const globalData: { [id: number]: LimitData } = {};
 
 function GetData(id: number) {
     if (id in globalData) {

@@ -4,7 +4,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "vitest"
   },
   "keywords": [
     "Rate",
@@ -19,7 +20,8 @@
   ],
   "devDependencies": {
     "ts-node": "^10.9.1",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "vitest": "^2.1.4"
   },
   "description": "",
   "homepage": "https://github.com/melon-dog/rate-keeper/blob/main/README.md",

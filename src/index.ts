@@ -1,4 +1,4 @@
-const globalData: { [id: number]: LimitData } = {};
+const globalRateData: { [id: number]: LimitData } = {};
 
 class LimitData {
     readonly queue: (() => void)[] = [];
@@ -10,18 +10,24 @@ class LimitData {
     }
 }
 
-function GetData(id: number) {
-    if (id in globalData) {
-        return globalData[id];
+function GetRateData(queueID: number) {
+    if (queueID in globalRateData) {
+        return globalRateData[queueID];
     } else {
-        globalData[id] = new LimitData();
-        return globalData[id]
+        globalRateData[queueID] = new LimitData();
+        return globalRateData[queueID]
     }
 }
 
-export default function RateKeeper<Args extends unknown[], Result>(action: (...args: Args) => Result, rateLimit: number, id: number = 0): (...args: Args) => Promise<Result> {
+/**
+ * @param {(...args: Args) => Result} action The action to be rate limited.
+ * @param {number} rateLimit The minimum interval in milliseconds between each execution.
+ * @param {number} queueID Optional. A queue identifier; actions in the same queue are rate-limited and executed sequentially. Defaults to 0 for a dedicated queue for this action.
+ * @returns {(...args: Args) => Promise<Result>} An asynchronous function that executes the action and returns a promise with the result.
+ */
+export default function RateKeeper<Args extends unknown[], Result>(action: (...args: Args) => Result, rateLimit: number, queueID: number = 0): (...args: Args) => Promise<Result> {
 
-    const limitData = id === 0 ? new LimitData() : GetData(id);
+    const limitData = queueID === 0 ? new LimitData() : GetRateData(queueID);
 
     function ProcessQueue(): void {
         limitData.queue.shift()?.();

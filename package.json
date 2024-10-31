@@ -17,5 +17,10 @@
   ],
   "author": "melon-dog",
   "license": "MIT",
-  "description": ""
+  "description": "",
+  "homepage": "https://github.com/melon-dog/rate-keeper/blob/main/README.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/melon-dog/rate-keeper"
+  }
 }

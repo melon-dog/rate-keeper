@@ -1,5 +1,5 @@
 import { expect, test, vi } from 'vitest'
-import RateKeeper from "../src/index";
+import RateKeeper from "../../src/index";
 
 let log: string[] = [];
 

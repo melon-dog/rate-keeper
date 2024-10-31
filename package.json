@@ -1,14 +1,10 @@
 {
   "name": "rate-keeper",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "dist/index.js",
-  "devDependencies": {
-    "typescript": "^5.6.3"
-  },
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
-    "prepublish": "tsc"
+    "build": "tsc"
   },
   "keywords": [
     "Rate",
@@ -17,6 +13,14 @@
   ],
   "author": "melon-dog",
   "license": "MIT",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
+  },
   "description": "",
   "homepage": "https://github.com/melon-dog/rate-keeper/blob/main/README.md",
   "repository": {

@@ -31,6 +31,8 @@ function UnsafeLogger(newLog) {
 ```
 ### Basic
 ```javascript
+import RateKeeper from "rate-keeper";
+
 const SafeLogger = RateKeeper(UnsafeLogger, 500); // Minimum of 500ms between calls.
 
 SafeLogger("Hello World 1");
@@ -46,6 +48,8 @@ Hello World 3
 ```
 ### Queues
 ```javascript
+import RateKeeper from "rate-keeper";
+
 const customQueueID = 5721;
 
 const SafeLogger1 = RateKeeper(UnsafeLogger, 500, customQueueID); // Same queue as Logger2.
@@ -66,6 +70,8 @@ Hello World 2
 ### Promises
 A function created with `rate-keeper` returns a promise containing the invocation result, making asynchronous handling straightforward.
 ```javascript
+import RateKeeper from "rate-keeper";
+
 const SafeLogger = RateKeeper(UnsafeLogger, 500); // Minimum of 500ms between calls.
 
 SafeLogger("Hello World 1").then(result => {

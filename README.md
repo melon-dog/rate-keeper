@@ -1,6 +1,6 @@
 # rate-keeper
 
-[![npm version](https://img.shields.io/npm/v/rate-keeper)](https://www.npmjs.com/package/rate-keeper) [![npm downloads](https://img.shields.io/npm/dm/rate-keeper)](https://www.npmjs.com/package/rate-keeper) ![License](https://img.shields.io/npm/l/rate-keeper)
+[![npm version](https://img.shields.io/npm/v/rate-keeper)](https://www.npmjs.com/package/rate-keeper) [![npm downloads](https://img.shields.io/npm/dm/rate-keeper)](https://www.npmjs.com/package/rate-keeper) [![License](https://img.shields.io/npm/l/rate-keeper)](https://www.npmjs.com/package/rate-keeper)
 
 [![dependency count](https://badgen.net/bundlephobia/dependency-count/rate-keeper)](https://bundlephobia.com/package/rate-keeper) [![min zip](https://badgen.net/bundlephobia/minzip/rate-keeper)](https://bundlephobia.com/package/rate-keeper)
 

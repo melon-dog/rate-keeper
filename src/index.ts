@@ -1,49 +1,79 @@
+// Define settings for each queue
+type DropPolicy = "reject" | "dropOldest";
+
+interface QueueSettings {
+    id: number;
+    maxQueueSize?: number; // Max size of the queue
+    dropPolicy?: DropPolicy; // Policy when max size is reached: 'reject' or 'dropOldest'
+}
+
 const globalRateData: { [id: number]: LimitData } = {};
 
 class LimitData {
     readonly queue: (() => void)[] = [];
     timer: ReturnType<typeof setInterval> | null = null;
+    settings: QueueSettings;
 
-    constructor() {
-        this.queue = [];
-        this.timer = null;
+    constructor(settings: QueueSettings) {
+        this.settings = settings;
     }
 }
 
-function GetRateData(queueID: number) {
-    if (queueID in globalRateData) {
-        return globalRateData[queueID];
+function GetRateData(settings: QueueSettings): LimitData {
+    const { id } = settings;
+    if (id in globalRateData) {
+        return globalRateData[id];
     } else {
-        globalRateData[queueID] = new LimitData();
-        return globalRateData[queueID]
+        globalRateData[id] = new LimitData(settings);
+        return globalRateData[id];
     }
 }
 
 /**
- * @param {(...args: Args) => Result} action The action to be rate limited.
+ * @param {(...args: Args) => Result} action The action to be rate-limited.
  * @param {number} rateLimit The minimum interval in milliseconds between each execution.
- * @param {number} queueID Optional. A queue identifier; actions in the same queue are rate-limited and executed sequentially. Defaults to 0 for a dedicated queue for this action.
+ * @param {QueueSettings} settings Optional. Queue settings for rate limiting and execution.
  * @returns {(...args: Args) => Promise<Result>} An asynchronous function that executes the action and returns a promise with the result.
  */
-export default function RateKeeper<Args extends unknown[], Result>(action: (...args: Args) => Result, rateLimit: number, queueID: number = 0): (...args: Args) => Promise<Result> {
-
-    const limitData = queueID === 0 ? new LimitData() : GetRateData(queueID);
+export default function RateKeeper<Args extends unknown[], Result>(
+    action: (...args: Args) => Result,
+    rateLimit: number,
+    settings: QueueSettings = { id: 0 }
+): (...args: Args) => Promise<Result> {
+    const limitData = settings.id === 0 ? new LimitData(settings) : GetRateData(settings);
 
     function ProcessQueue(): void {
         limitData.queue.shift()?.();
 
         if (limitData.queue.length === 0 && limitData.timer !== null) {
-            clearInterval(limitData.timer)
-            limitData.timer = null
+            clearInterval(limitData.timer);
+            limitData.timer = null;
         }
     }
 
-    function PublicFunc(...arg: Args): Promise<Result> {
-        let resolve: ((res: Result) => void);
-        const promise = new Promise<Result>(res => { resolve = res; });
+    function PublicFunc(...args: Args): Promise<Result> {
+        const { maxQueueSize, dropPolicy } = limitData.settings;
+        let resolve: (res: Result) => void;
 
-        limitData.queue.push(() => resolve(action(...arg)));
+        const promise = new Promise<Result>((res) => {
+            resolve = res;
+        });
 
+        // Handle queue size limit
+        if (maxQueueSize !== undefined && limitData.queue.length >= maxQueueSize) {
+            if (dropPolicy === "reject") {
+                // Reject new task by immediately resolving with a rejection
+                return Promise.reject(new Error("Queue is at max capacity."));
+            } else if (dropPolicy === "dropOldest") {
+                // Drop the oldest task in the queue
+                limitData.queue.shift();
+            }
+        }
+
+        // Add the new task to the queue
+        limitData.queue.push(() => resolve(action(...args)));
+
+        // Start the timer if it isn’t already running
         if (limitData.timer === null) {
             ProcessQueue();
             limitData.timer = setInterval(ProcessQueue, rateLimit);

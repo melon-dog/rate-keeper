@@ -11,8 +11,8 @@ function UnsafeLogger(newLog: string) {
   log.push(newLog);
 }
 
-const SafeLoggerOwnQueue = RateKeeper(UnsafeLogger, 500); // 100ms
-const SafeLoggerQueue1 = RateKeeper(UnsafeLogger, 200, 1); // 100ms
+const SafeLoggerOwnQueue = RateKeeper(UnsafeLogger, 500); // 500ms
+const SafeLoggerQueue1 = RateKeeper(UnsafeLogger, 200, 1); // 200ms
 const SafeLoggerQueue2 = RateKeeper(UnsafeLogger, 100, 2); // 100ms
 const AnotherSafeLoggerQueue2 = RateKeeper(UnsafeLogger, 100, 2); // 100ms
 

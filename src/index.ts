@@ -21,7 +21,7 @@ interface QueueSettings {
 
 type Action = {
     action: (() => void)
-    reject: (reason?: any) => void
+    reject: (reason: Error) => void
 }
 
 class LimitData {
@@ -69,7 +69,7 @@ export default function RateKeeper<Args extends unknown[], Result>(
     function publicFunc(...args: Args): Promise<Result> {
         const { maxQueueSize, dropPolicy } = limitData.settings;
         let resolve: (res: Result) => void;
-        let reject: (reason?: any) => void;
+        let reject: (reason?: Error) => void;
 
         const promise = new Promise<Result>((res, rej) => {
             resolve = res;
@@ -90,7 +90,7 @@ export default function RateKeeper<Args extends unknown[], Result>(
         // Add the new task to the queue
         limitData.queue.push({
             action: () => resolve(action(...args)),
-            reject: (reason?) => { reject(reason) }
+            reject: (reason) => { reject(reason) }
         });
 
         // Start the timer if it isn’t already running

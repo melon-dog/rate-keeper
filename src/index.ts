@@ -1,5 +1,8 @@
 const globalRateData: { [id: number]: LimitData } = {};
 
+/**
+ * @enum {DropPolicy} Defines the behavior of the queue when the maximum size has been reached.
+ */
 export enum DropPolicy {
     Reject,
     DropOldest

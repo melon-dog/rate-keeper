@@ -19,7 +19,7 @@ class LimitData {
     }
 }
 
-function GetRateData(settings: QueueSettings): LimitData {
+function getRateData(settings: QueueSettings): LimitData {
     const { id } = settings;
     if (id in globalRateData) {
         return globalRateData[id];
@@ -40,9 +40,9 @@ export default function RateKeeper<Args extends unknown[], Result>(
     rateLimit: number,
     settings: QueueSettings = { id: 0 }
 ): (...args: Args) => Promise<Result> {
-    const limitData = settings.id === 0 ? new LimitData(settings) : GetRateData(settings);
+    const limitData = settings.id === 0 ? new LimitData(settings) : getRateData(settings);
 
-    function ProcessQueue(): void {
+    function processQueue(): void {
         limitData.queue.shift()?.();
 
         if (limitData.queue.length === 0 && limitData.timer !== null) {
@@ -51,7 +51,7 @@ export default function RateKeeper<Args extends unknown[], Result>(
         }
     }
 
-    function PublicFunc(...args: Args): Promise<Result> {
+    function publicFunc(...args: Args): Promise<Result> {
         const { maxQueueSize, dropPolicy } = limitData.settings;
         let resolve: (res: Result) => void;
 
@@ -75,12 +75,12 @@ export default function RateKeeper<Args extends unknown[], Result>(
 
         // Start the timer if it isn’t already running
         if (limitData.timer === null) {
-            ProcessQueue();
-            limitData.timer = setInterval(ProcessQueue, rateLimit);
+            processQueue();
+            limitData.timer = setInterval(processQueue, rateLimit);
         }
 
         return promise;
     }
 
-    return PublicFunc;
+    return publicFunc;
 }

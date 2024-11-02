@@ -94,20 +94,20 @@ test('Drop Policy Reject', async () => {
   ]);
 });
 
-// test('Drop Policy Oldest', async () => {
-//   const actions: Promise<string>[] = [];
+test('Drop Policy Oldest', async () => {
+  const actions: Promise<string>[] = [];
 
-//   for (let i = 0; i < 10; i++) {
-//     actions.push(logger5Queue4Oldest(`[DO] Message ${i}`));
-//   }
+  for (let i = 0; i < 10; i++) {
+    actions.push(logger5Queue4Oldest(`[DO] Message ${i}`));
+  }
 
-//   await Promise.allSettled(actions);
-//   expect(log).toStrictEqual([
-//     "[DO] Message 0",
-//     "[DO] Message 6",
-//     "[DO] Message 7",
-//     "[DO] Message 8",
-//     "[DO] Message 9",
-//     "[DO] Message 10",
-//   ]);
-// });
+  await Promise.allSettled(actions);
+  expect(log).toStrictEqual([
+    "[DO] Message 0",
+    "[DO] Message 6",
+    "[DO] Message 7",
+    "[DO] Message 8",
+    "[DO] Message 9",
+    "[DO] Message 10",
+  ]);
+});

@@ -77,17 +77,17 @@ Queue Message 2
 
 ### Queues with Options
 
-You can configure queues with custom settings, such as a maximum queue size and policies for handling overflow. Options include `reject` (discard new entries when full) or `dropOldest` (remove the oldest entry to make room for new ones).
+You can configure queues with custom settings, such as a maximum queue size and policies for handling overflow. Options include `Reject` (discard new entries when full) or `DropOldest` (remove the oldest entry to make room for new ones).
 
 ```javascript
-import RateKeeper from "rate-keeper";
+import RateKeeper, { DropPolicy } from "rate-keeper";
 
 const queueID = 2002;
 
 const loggerWithLimit = RateKeeper(logMessage, 500, {
     id: queueID,
     maxQueueSize: 2,
-    dropPolicy: "dropOldest", // Removes the oldest task when the queue is full
+    dropPolicy: DropPolicy.DropOldest, // Removes the oldest task when the queue is full
 });
 
 loggerWithLimit("Message 1"); // Added to queue

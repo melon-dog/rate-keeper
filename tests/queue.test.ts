@@ -18,12 +18,12 @@ const logger2Queue2 = RateKeeper(unsafeLogger, 100, { id: 2 }); // 100ms
 const logger3Queue2 = RateKeeper(unsafeLogger, 100, { id: 2 }); // 100ms
 const logger4Queue3Reject = RateKeeper(unsafeLogger, 300, {
   id: 3,
-  dropPolicy: DropPolicy.reject,
+  dropPolicy: DropPolicy.Reject,
   maxQueueSize: 4
 }); // 300ms
 const logger5Queue4Oldest = RateKeeper(unsafeLogger, 300, {
   id: 4,
-  dropPolicy: DropPolicy.dropOldest,
+  dropPolicy: DropPolicy.DropOldest,
   maxQueueSize: 8
 }); // 300ms
 

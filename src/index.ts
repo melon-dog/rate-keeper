@@ -4,8 +4,8 @@ const globalRateData: { [id: number]: LimitData } = {};
  * @enum {DropPolicy} DropPolicy The minimum interval in milliseconds between each execution.
  */
 export enum DropPolicy {
-    reject,
-    dropOldest
+    Reject,
+    DropOldest
 };
 
 /**
@@ -71,10 +71,10 @@ export default function RateKeeper<Args extends unknown[], Result>(
 
         // Handle queue size limit
         if (maxQueueSize !== undefined && limitData.queue.length >= maxQueueSize) {
-            if (dropPolicy === DropPolicy.reject) {
+            if (dropPolicy === DropPolicy.Reject) {
                 // Reject new task by immediately resolving with a rejection
                 return Promise.reject(new Error("Queue is at max capacity."));
-            } else if (dropPolicy === DropPolicy.dropOldest) {
+            } else if (dropPolicy === DropPolicy.DropOldest) {
                 // Drop the oldest task in the queue
                 limitData.queue.shift();
             }

@@ -102,9 +102,10 @@ test('Drop Policy Oldest', async () => {
   await Promise.allSettled(actions);
   expect(log).toStrictEqual([
     "[DO] Message 0",
-    "[DO] Message 1",
-    "[DO] Message 2",
-    "[DO] Message 3",
-    "[DO] Message 4",
+    "[DO] Message 6",
+    "[DO] Message 7",
+    "[DO] Message 8",
+    "[DO] Message 9",
+    "[DO] Message 10",
   ]);
 });

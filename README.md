@@ -99,6 +99,8 @@ loggerWithLimit("Message 3"); // "Message 1" is dropped, "Message 3" added
 ```
 
 ```javascript
+Message 0
+// 500ms later...
 Message 2
 // 500ms later...
 Message 3

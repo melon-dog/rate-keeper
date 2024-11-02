@@ -7,21 +7,21 @@ function ResetLog() {
   log = [];
 }
 
-function unsafeLogger(newLog: string) {
+function logMessage(newLog: string) {
   log.push(newLog);
   return newLog;
 }
 
-const loggerIndependant = RateKeeper(unsafeLogger, 500); // 500ms
-const logger1Queue1 = RateKeeper(unsafeLogger, 200, { id: 1 }); // 200ms
-const logger2Queue2 = RateKeeper(unsafeLogger, 100, { id: 2 }); // 100ms
-const logger3Queue2 = RateKeeper(unsafeLogger, 100, { id: 2 }); // 100ms
-const logger4Queue3Reject = RateKeeper(unsafeLogger, 10, {
+const loggerIndependant = RateKeeper(logMessage, 500); // 500ms
+const logger1Queue1 = RateKeeper(logMessage, 200, { id: 1 }); // 200ms
+const logger2Queue2 = RateKeeper(logMessage, 100, { id: 2 }); // 100ms
+const logger3Queue2 = RateKeeper(logMessage, 100, { id: 2 }); // 100ms
+const logger4Queue3Reject = RateKeeper(logMessage, 10, {
   id: 3,
   dropPolicy: DropPolicy.Reject,
   maxQueueSize: 4
 }); // 10ms
-const logger5Queue4Oldest = RateKeeper(unsafeLogger, 10, {
+const logger5Queue4Oldest = RateKeeper(logMessage, 10, {
   id: 4,
   dropPolicy: DropPolicy.DropOldest,
   maxQueueSize: 5
@@ -39,19 +39,19 @@ test('Basic Usage', async () => {
   actions.push(loggerIndependant("[OQ-500ms-2]"));
   actions.push(loggerIndependant("[OQ-500ms-3]"));
 
-  unsafeLogger("[US-1]");
-  unsafeLogger("[US-2]");
-  unsafeLogger("[US-3]");
+  logMessage("[US-1]");
+  logMessage("[US-2]");
+  logMessage("[US-3]");
 
   actions.push(logger1Queue1("[Q1-200ms-1]"));
   actions.push(logger1Queue1("[Q1-200ms-2]"));
   actions.push(logger1Queue1("[Q1-200ms-3]"));
 
-  actions.push(logger2Queue2("[Q2-100ms-1]").then(x => unsafeLogger(x + " promise")));
+  actions.push(logger2Queue2("[Q2-100ms-1]").then(x => logMessage(x + " promise")));
   actions.push(logger2Queue2("[Q2-100ms-2]"));
   actions.push(logger2Queue2("[Q2-100ms-3]"));
 
-  actions.push(logger3Queue2("[Q2-100ms-4]").then(x => unsafeLogger(x + " promise")));
+  actions.push(logger3Queue2("[Q2-100ms-4]").then(x => logMessage(x + " promise")));
   actions.push(logger3Queue2("[Q2-100ms-5]"));
   actions.push(logger3Queue2("[Q2-100ms-6]"));
 

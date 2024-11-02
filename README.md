@@ -90,6 +90,7 @@ const loggerWithLimit = RateKeeper(logMessage, 500, {
     dropPolicy: DropPolicy.DropOldest, // Removes the oldest task when the queue is full
 });
 
+loggerWithLimit("Message 0"); // Processed.
 loggerWithLimit("Message 1"); // Added to queue
 loggerWithLimit("Message 2"); // Added to queue
 loggerWithLimit("Message 3"); // "Message 1" is dropped, "Message 3" added

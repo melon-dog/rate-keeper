@@ -11,7 +11,7 @@ export enum DropPolicy {
 /**
  * @param {number} id A queue identifier; actions in the same queue are rate-limited and executed sequentially, 0 is a reserved value.
  * @param {number} maxQueueSize Optional. Max size of the queue.
- * @param {DropPolicy} dropPolicy Optional. Policy when max size is reached: 'reject' or 'dropOldest'.
+ * @param {DropPolicy} dropPolicy Optional. Policy when max size is reached: 'Reject' or 'DropOldest'.
  */
 interface QueueSettings {
     id: number;

@@ -1,17 +1,14 @@
 const globalRateData: { [id: number]: LimitData } = {};
 
-/**
- * @enum {DropPolicy} DropPolicy The minimum interval in milliseconds between each execution.
- */
 export enum DropPolicy {
     Reject,
     DropOldest
 };
 
 /**
- * @param {id} id A queue identifier; actions in the same queue are rate-limited and executed sequentially, 0 is a reserved value.
- * @param {maxQueueSize} maxQueueSize Optional. Max size of the queue.
- * @param {dropPolicy} dropPolicy Optional. Policy when max size is reached: 'reject' or 'dropOldest'.
+ * @param {number} id A queue identifier; actions in the same queue are rate-limited and executed sequentially, 0 is a reserved value.
+ * @param {number} maxQueueSize Optional. Max size of the queue.
+ * @param {DropPolicy} dropPolicy Optional. Policy when max size is reached: 'reject' or 'dropOldest'.
  */
 interface QueueSettings {
     id: number;

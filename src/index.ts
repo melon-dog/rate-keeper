@@ -1,13 +1,23 @@
-// Define settings for each queue
-type DropPolicy = "reject" | "dropOldest";
+const globalRateData: { [id: number]: LimitData } = {};
 
+/**
+ * @enum {DropPolicy} DropPolicy The minimum interval in milliseconds between each execution.
+ */
+export enum DropPolicy {
+    reject,
+    dropOldest
+};
+
+/**
+ * @param {id} id A queue identifier; actions in the same queue are rate-limited and executed sequentially, 0 is a reserved value.
+ * @param {maxQueueSize} maxQueueSize Optional. Max size of the queue.
+ * @param {dropPolicy} dropPolicy Optional. Policy when max size is reached: 'reject' or 'dropOldest'.
+ */
 interface QueueSettings {
     id: number;
-    maxQueueSize?: number; // Max size of the queue
-    dropPolicy?: DropPolicy; // Policy when max size is reached: 'reject' or 'dropOldest'
+    maxQueueSize?: number;
+    dropPolicy?: DropPolicy;
 }
-
-const globalRateData: { [id: number]: LimitData } = {};
 
 class LimitData {
     readonly queue: (() => void)[] = [];
@@ -61,10 +71,10 @@ export default function RateKeeper<Args extends unknown[], Result>(
 
         // Handle queue size limit
         if (maxQueueSize !== undefined && limitData.queue.length >= maxQueueSize) {
-            if (dropPolicy === "reject") {
+            if (dropPolicy === DropPolicy.reject) {
                 // Reject new task by immediately resolving with a rejection
                 return Promise.reject(new Error("Queue is at max capacity."));
-            } else if (dropPolicy === "dropOldest") {
+            } else if (dropPolicy === DropPolicy.dropOldest) {
                 // Drop the oldest task in the queue
                 limitData.queue.shift();
             }

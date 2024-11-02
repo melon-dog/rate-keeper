@@ -16,16 +16,16 @@ const loggerIndependant = RateKeeper(unsafeLogger, 500); // 500ms
 const logger1Queue1 = RateKeeper(unsafeLogger, 200, { id: 1 }); // 200ms
 const logger2Queue2 = RateKeeper(unsafeLogger, 100, { id: 2 }); // 100ms
 const logger3Queue2 = RateKeeper(unsafeLogger, 100, { id: 2 }); // 100ms
-const logger4Queue3Reject = RateKeeper(unsafeLogger, 300, {
+const logger4Queue3Reject = RateKeeper(unsafeLogger, 10, {
   id: 3,
   dropPolicy: DropPolicy.Reject,
   maxQueueSize: 4
-}); // 300ms
-const logger5Queue4Oldest = RateKeeper(unsafeLogger, 300, {
+}); // 10ms
+const logger5Queue4Oldest = RateKeeper(unsafeLogger, 10, {
   id: 4,
   dropPolicy: DropPolicy.DropOldest,
-  maxQueueSize: 8
-}); // 300ms
+  maxQueueSize: 5
+}); // 10ms
 
 afterEach(() => {
   ResetLog();
@@ -75,19 +75,36 @@ test('Basic Usage', async () => {
   ]);
 });
 
-test('Drop Policy', async () => {
+test('Drop Policy Reject', async () => {
   const actions: Promise<string>[] = [];
 
   for (let i = 0; i < 10; i++) {
-    actions.push(logger4Queue3Reject(`Message ${i}`));
+    actions.push(logger4Queue3Reject(`[R] Message ${i}`));
   }
 
   await Promise.allSettled(actions);
   expect(log).toStrictEqual([
-    "Message 0",
-    "Message 1",
-    "Message 2",
-    "Message 3",
-    "Message 4",
+    "[R] Message 0",
+    "[R] Message 1",
+    "[R] Message 2",
+    "[R] Message 3",
+    "[R] Message 4",
+  ]);
+});
+
+test('Drop Policy Oldest', async () => {
+  const actions: Promise<string>[] = [];
+
+  for (let i = 0; i < 10; i++) {
+    actions.push(logger5Queue4Oldest(`[DO] Message ${i}`));
+  }
+
+  await Promise.allSettled(actions);
+  expect(log).toStrictEqual([
+    "[DO] Message 0",
+    "[DO] Message 1",
+    "[DO] Message 2",
+    "[DO] Message 3",
+    "[DO] Message 4",
   ]);
 });

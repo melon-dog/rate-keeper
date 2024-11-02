@@ -104,6 +104,7 @@ test('Drop Policy Reject', async () => {
     "[R] Message 2",
     "[R] Message 3",
     "[R] Message 4",
+
     "[R] Message 10",
     "[R] Message 11",
     "[R] Message 12",
@@ -127,5 +128,26 @@ test('Drop Policy Oldest', async () => {
     "[DO] Message 7",
     "[DO] Message 8",
     "[DO] Message 9",
+  ]);
+
+  for (let i = 10; i < 20; i++) {
+    actions.push(logger5Queue4Oldest(`[DO] Message ${i}`));
+  }
+
+  await Promise.allSettled(actions);
+  expect(log).toStrictEqual([
+    "[DO] Message 0",
+    "[DO] Message 5",
+    "[DO] Message 6",
+    "[DO] Message 7",
+    "[DO] Message 8",
+    "[DO] Message 9",
+
+    "[DO] Message 10",
+    "[DO] Message 15",
+    "[DO] Message 16",
+    "[DO] Message 17",
+    "[DO] Message 18",
+    "[DO] Message 19",
   ]);
 });

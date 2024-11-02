@@ -26,7 +26,7 @@ npm install rate-keeper
 Existing code.
 
 ```javascript
-function UnsafeLogger(newLog) {
+function logMessage(newLog) {
     console.log(newLog);
     return newLog;
 }
@@ -37,19 +37,19 @@ function UnsafeLogger(newLog) {
 ```javascript
 import RateKeeper from "rate-keeper";
 
-const SafeLogger = RateKeeper(UnsafeLogger, 500); // Minimum of 500ms between calls.
+const safeLogger = RateKeeper(logMessage, 500); // Minimum of 500ms between calls.
 
-SafeLogger("Hello World 1");
-SafeLogger("Hello World 2");
-SafeLogger("Hello World 3");
+safeLogger("Message 1");
+safeLogger("Message 2");
+safeLogger("Message 3");
 ```
 
 ```javascript
-Hello World 1
+Message 1
 //500ms later...
-Hello World 2
+Message 2
 //500ms later...
-Hello World 3
+Message 3
 ```
 
 ### Queues
@@ -110,9 +110,9 @@ A function created with `rate-keeper` returns a promise containing the invocatio
 ```javascript
 import RateKeeper from "rate-keeper";
 
-const SafeLogger = RateKeeper(UnsafeLogger, 500); // Minimum of 500ms between calls.
+const safeLogger = RateKeeper(logMessage, 500); // Minimum of 500ms between calls.
 
-SafeLogger("Hello World 1").then((result) => {
+safeLogger("Hello World 1").then((result) => {
     //...
 });
 ```

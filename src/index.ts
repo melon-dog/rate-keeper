@@ -19,8 +19,13 @@ interface QueueSettings {
     dropPolicy?: DropPolicy;
 }
 
+type Action = {
+    action: (() => void)
+    reject: (reason?: any) => void
+}
+
 class LimitData {
-    readonly queue: (() => void)[] = [];
+    readonly queue: Action[] = [];
     timer: ReturnType<typeof setInterval> | null = null;
     settings: QueueSettings;
 
@@ -53,7 +58,7 @@ export default function RateKeeper<Args extends unknown[], Result>(
     const limitData = settings.id === 0 ? new LimitData(settings) : getRateData(settings);
 
     function processQueue(): void {
-        limitData.queue.shift()?.();
+        limitData.queue.shift()?.action?.();
 
         if (limitData.queue.length === 0 && limitData.timer !== null) {
             clearInterval(limitData.timer);
@@ -64,9 +69,11 @@ export default function RateKeeper<Args extends unknown[], Result>(
     function publicFunc(...args: Args): Promise<Result> {
         const { maxQueueSize, dropPolicy } = limitData.settings;
         let resolve: (res: Result) => void;
+        let reject: (reason?: any) => void;
 
-        const promise = new Promise<Result>((res) => {
+        const promise = new Promise<Result>((res, rej) => {
             resolve = res;
+            reject = rej;
         });
 
         // Handle queue size limit
@@ -76,12 +83,15 @@ export default function RateKeeper<Args extends unknown[], Result>(
                 return Promise.reject(new Error("Queue is at max capacity."));
             } else if (dropPolicy === DropPolicy.DropOldest) {
                 // Drop the oldest task in the queue
-                limitData.queue.shift();
+                limitData.queue.shift()?.reject(new Error("Queue is at max capacity."));
             }
         }
 
         // Add the new task to the queue
-        limitData.queue.push(() => resolve(action(...args)));
+        limitData.queue.push({
+            action: () => resolve(action(...args)),
+            reject: (reason?) => { reject(reason) }
+        });
 
         // Start the timer if it isn’t already running
         if (limitData.timer === null) {

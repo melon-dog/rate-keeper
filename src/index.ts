@@ -6,7 +6,7 @@ const globalRateData: { [id: number]: LimitData } = {};
 export enum DropPolicy {
     Reject,
     DropOldest
-};
+}
 
 /**
  * @param {number} id A queue identifier; actions in the same queue are rate-limited and executed sequentially, 0 is a reserved value.

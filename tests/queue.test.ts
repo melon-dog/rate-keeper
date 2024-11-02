@@ -12,23 +12,11 @@ function UnsafeLogger(newLog: string) {
 }
 
 const SafeLoggerOwnQueue = RateKeeper(UnsafeLogger, 500); // 500ms
-const SafeLoggerQueue1 = RateKeeper(UnsafeLogger, 200, { // 200ms
-  id: 1,
-  maxQueueSize: 2,
-  dropPolicy: "dropOldest", // Removes the oldest task when the queue is full
-});
+const SafeLoggerQueue1 = RateKeeper(UnsafeLogger, 200, { id: 1 }); // 200ms
 
-const SafeLoggerQueue2 = RateKeeper(UnsafeLogger, 100, { // 100ms
-  id: 1,
-  maxQueueSize: 2,
-  dropPolicy: "dropOldest", // Removes the oldest task when the queue is full
-});
+const SafeLoggerQueue2 = RateKeeper(UnsafeLogger, 100, { id: 2 }); // 100ms
 
-const AnotherSafeLoggerQueue2 = RateKeeper(UnsafeLogger, 100, { // 100ms
-  id: 1,
-  maxQueueSize: 2,
-  dropPolicy: "dropOldest", // Removes the oldest task when the queue is full
-});
+const AnotherSafeLoggerQueue2 = RateKeeper(UnsafeLogger, 100, { id: 2 }); // 100ms
 
 test('RateKeeper Queue', async () => {
 

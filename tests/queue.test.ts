@@ -92,6 +92,24 @@ test('Drop Policy Reject', async () => {
     "[R] Message 3",
     "[R] Message 4",
   ]);
+
+  for (let i = 10; i < 20; i++) {
+    actions.push(logger4Queue3Reject(`[R] Message ${i}`));
+  }
+
+  await Promise.allSettled(actions);
+  expect(log).toStrictEqual([
+    "[R] Message 0",
+    "[R] Message 1",
+    "[R] Message 2",
+    "[R] Message 3",
+    "[R] Message 4",
+    "[R] Message 10",
+    "[R] Message 11",
+    "[R] Message 12",
+    "[R] Message 13",
+    "[R] Message 14",
+  ]);
 });
 
 test('Drop Policy Oldest', async () => {

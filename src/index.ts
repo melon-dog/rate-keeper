@@ -1,4 +1,4 @@
-const globalRateData: { [id: number]: LimitData } = {};
+const globalRateData = new Map<number, LimitData>();
 
 /**
  * @enum {DropPolicy} Defines the behavior of the queue when the maximum size has been reached.
@@ -6,6 +6,11 @@ const globalRateData: { [id: number]: LimitData } = {};
 export enum DropPolicy {
     Reject,
     DropOldest
+}
+
+type Action = {
+    action: (() => void)
+    reject: (reason: Error) => void
 }
 
 /**
@@ -17,11 +22,6 @@ interface QueueSettings {
     id: number;
     maxQueueSize?: number;
     dropPolicy?: DropPolicy;
-}
-
-type Action = {
-    action: (() => void)
-    reject: (reason: Error) => void
 }
 
 class LimitData {
@@ -36,11 +36,12 @@ class LimitData {
 
 function getRateData(settings: QueueSettings): LimitData {
     const { id } = settings;
-    if (id in globalRateData) {
-        return globalRateData[id];
+    if (globalRateData.has(id)) {
+        return globalRateData.get(id) as LimitData;
     } else {
-        globalRateData[id] = new LimitData(settings);
-        return globalRateData[id];
+        const newLimitData = new LimitData(settings);
+        globalRateData.set(id, newLimitData);
+        return newLimitData;
     }
 }
 

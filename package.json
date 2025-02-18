@@ -21,7 +21,7 @@
   "devDependencies": {
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.9"
   },
   "description": "A lightweight utility for easily adding rate limiting to functions, ideal for preventing API rate limit violations.",
   "homepage": "https://github.com/melon-dog/rate-keeper/blob/main/README.md",

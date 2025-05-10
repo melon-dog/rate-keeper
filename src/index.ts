@@ -101,7 +101,6 @@ export default function RateKeeper<Args extends unknown[], Result>(
             }
         };
 
-        // Manejar límite de cola
         if (maxQueueSize !== undefined && limitData.queue.length >= maxQueueSize) {
             if (dropPolicy === DropPolicy.Reject) {
                 return Promise.reject(new Error("Queue is at max capacity.")) as CancelablePromise<Result>;

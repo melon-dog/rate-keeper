@@ -1,5 +1,5 @@
 import { afterEach, expect, test, vi } from 'vitest'
-import RateKeeper, { DropPolicy } from "../src/index";
+import RateKeeper, { CancelablePromise, DropPolicy } from "../src/index";
 
 let log: string[] = [];
 
@@ -149,5 +149,65 @@ test('Drop Policy Oldest', async () => {
     "[DO] Message 17",
     "[DO] Message 18",
     "[DO] Message 19",
+  ]);
+});
+
+test('Simple Cancel Actions', async () => {
+  const actions: CancelablePromise<string>[] = [];
+  const actionsToCancel: CancelablePromise<string>[] = [];
+
+  actionsToCancel.push(loggerIndependant("Message 0"));  //<-- Cancelled but executed 
+  actionsToCancel.push(loggerIndependant("Message 1"));  //<-- Cancelled
+  actions.push(loggerIndependant("Message 2"));
+
+  actionsToCancel.forEach(action => action?.cancel());
+
+  await Promise.allSettled([...actions, ...actionsToCancel]);
+  expect(log).toStrictEqual([
+    "Message 0",
+    "Message 2",
+  ]);
+});
+
+test('Complex Cancel Actions', async () => {
+  const actions: CancelablePromise<string>[] = [];
+  const actionsToCancel: CancelablePromise<string>[] = [];
+
+  logMessage("[US-1]");
+  logMessage("[US-2]");
+  logMessage("[US-3]");
+
+  actionsToCancel.push(loggerIndependant("[OQ-500ms-1]"));  //<-- Cancelled but executed 
+  actionsToCancel.push(loggerIndependant("[OQ-500ms-2]"));  //<-- Cancelled
+  actions.push(loggerIndependant("[OQ-500ms-3]"));
+
+  actionsToCancel.push(logger2Queue2("[Q2-100ms-1]"));      //<-- Cancelled but executed 
+  actions.push(logger2Queue2("[Q2-100ms-2]"));
+  actions.push(logger2Queue2("[Q2-100ms-3]"));
+
+  const customLogger = logger3Queue2("[Q2-100ms-4]");
+  customLogger
+    .then(x => logMessage(x + "This should not be executed!"))
+    .catch((error) => logMessage(error.message));
+  customLogger.cancel(new Error("Expected Error"));
+
+  actionsToCancel.push(customLogger);                         //<-- Cancelled 
+  actions.push(logger3Queue2("[Q2-100ms-5]"));
+  actionsToCancel.push(logger3Queue2("[Q2-100ms-6]"));        //<-- Cancelled
+
+  actionsToCancel.forEach(action => action?.cancel());
+
+  await Promise.allSettled([...actions, ...actionsToCancel]);
+  expect(log).toStrictEqual([
+    "[US-1]",
+    "[US-2]",
+    "[US-3]",
+    "[OQ-500ms-1]",
+    "[Q2-100ms-1]",
+    "Expected Error",
+    "[Q2-100ms-2]",
+    "[Q2-100ms-3]",
+    "[Q2-100ms-5]",
+    "[OQ-500ms-3]",
   ]);
 });

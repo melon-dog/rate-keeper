@@ -119,3 +119,23 @@ safeLogger("Hello World 1").then((result) => {
     //...
 });
 ```
+
+### Cancelable Actions
+
+```javascript
+import RateKeeper from "rate-keeper";
+
+const safeLogger = RateKeeper(logMessage, 500); // Minimum of 500ms between calls.
+
+safeLogger("Message 1");
+const message2 = safeLogger("Message 2");
+safeLogger("Message 3");
+
+message2.cancel();
+```
+
+```javascript
+Message 1
+//500ms later...
+Message 3
+```

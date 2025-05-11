@@ -11,7 +11,7 @@
 -   Create `actions` with rate limits.
 -   Manages multiple queues by ID, allowing `sequential and parallel actions`.
 -   Helps `prevent overloading` of external services by managing API usage.
--   Very `easy to integrate` into existing code.
+-   Very `easy to integrate` into existing code.a
 
 ## Installation
 
@@ -121,6 +121,8 @@ safeLogger("Hello World 1").then((result) => {
 ```
 
 ### Cancelable Actions
+
+You can cancel an action that has not yet been executed.
 
 ```javascript
 import RateKeeper from "rate-keeper";

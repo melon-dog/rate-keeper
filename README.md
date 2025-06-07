@@ -11,7 +11,7 @@
 -   Create `actions` with rate limits.
 -   Manages multiple queues by ID, allowing `sequential and parallel actions`.
 -   Helps `prevent overloading` of external services by managing API usage.
--   Very `easy to integrate` into existing code.a
+-   Very `easy to integrate` into existing code.
 
 ## Installation
 

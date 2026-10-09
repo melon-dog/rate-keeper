@@ -1,5 +1,11 @@
 const globalRateData = new Map<number, LimitData>();
 
+/** @internal Queues with a pending slot, in registration order. */
+const pendingQueues = new Set<LimitData>();
+
+/** @internal Single shared timer for the earliest pending slot. */
+let schedulerTimer: ReturnType<typeof setTimeout> | null = null;
+
 /** @internal Error messages used throughout the library. */
 const ERRORS = {
     CANCELLED: "Cancelled by user.",
@@ -100,12 +106,14 @@ class Deque<T> {
  * @internal
  * Holds the state for a rate-limited queue.
  * @property {Deque<Action>} queue - The queue of pending actions.
- * @property {ReturnType<typeof setInterval> | null} timer - The interval timer for processing the queue.
+ * @property {number} rateLimit - The interval in ms for the active burst.
+ * @property {number} nextAllowedAt - Epoch ms at which the next action may run, 0 when idle.
  * @property {QueueSettings} settings - The configuration for this queue.
  */
 class LimitData {
     readonly queue = new Deque<Action>();
-    timer: ReturnType<typeof setInterval> | null = null;
+    rateLimit = 0;
+    nextAllowedAt = 0;
     settings: QueueSettings;
 
     constructor(settings: QueueSettings) {
@@ -127,6 +135,73 @@ function getRateData(settings: QueueSettings): LimitData {
     const newLimitData = new LimitData(settings);
     globalRateData.set(id, newLimitData);
     return newLimitData;
+}
+
+/**
+ * @internal
+ * Runs the next action of the given queue.
+ * @param {LimitData} limitData - The queue to advance.
+ */
+function runNext(limitData: LimitData): void {
+    const next = limitData.queue.shift();
+    if (next) {
+        next.action();
+    }
+}
+
+/**
+ * @internal
+ * (Re-)arms the single shared timer for the earliest pending slot. Re-arming on
+ * every call also recovers from runtimes that cancel timers when a request's
+ * I/O context ends (Cloudflare Workers): `clearTimeout` is harmless on a
+ * cancelled handle, so a fresh timer is created.
+ */
+function scheduleNextSlot(): void {
+    let earliest = Infinity;
+    for (const limitData of pendingQueues) {
+        if (limitData.nextAllowedAt < earliest) {
+            earliest = limitData.nextAllowedAt;
+        }
+    }
+    if (schedulerTimer !== null) clearTimeout(schedulerTimer);
+    schedulerTimer = earliest === Infinity
+        ? null
+        : setTimeout(processPendingQueues, Math.max(0, earliest - Date.now()));
+}
+
+/**
+ * @internal
+ * Runs every queue that reached its slot. Queues are processed in registration
+ * order, so queues sharing the same slot keep a deterministic order, like the
+ * original per-queue intervals created during the same tick did.
+ */
+function processPendingQueues(): void {
+    schedulerTimer = null;
+    const now = Date.now();
+    for (const limitData of [...pendingQueues]) {
+        if (limitData.nextAllowedAt > now) {
+            continue;
+        }
+        if (limitData.queue.length === 0) {
+            limitData.nextAllowedAt = 0;
+            pendingQueues.delete(limitData);
+            continue;
+        }
+        runNext(limitData);
+        if (limitData.queue.length === 0) {
+            limitData.nextAllowedAt = 0;
+            pendingQueues.delete(limitData);
+            continue;
+        }
+        // Keep the original tick grid so queues stay in phase; re-anchor only
+        // when the grid fell more than one interval behind (e.g. after the
+        // runtime cancelled the timer and the queue sat idle for a while).
+        limitData.nextAllowedAt += limitData.rateLimit;
+        if (limitData.nextAllowedAt <= Date.now()) {
+            limitData.nextAllowedAt = Date.now() + limitData.rateLimit;
+        }
+    }
+    scheduleNextSlot();
 }
 
 /**
@@ -154,17 +229,6 @@ export default function RateKeeper<Args extends unknown[], Result>(
     settings: QueueSettings = { id: 0 }
 ): (...args: Args) => CancelablePromise<Result> {
     const limitData = settings.id === 0 ? new LimitData(settings) : getRateData(settings);
-
-    function processQueue(): void {
-        const next = limitData.queue.shift();
-        if (next) {
-            next.action();
-        }
-        if (limitData.queue.length === 0 && limitData.timer !== null) {
-            clearInterval(limitData.timer);
-            limitData.timer = null;
-        }
-    }
 
     function publicFunc(...args: Args): CancelablePromise<Result> {
         const { maxQueueSize, dropPolicy } = limitData.settings;
@@ -198,10 +262,13 @@ export default function RateKeeper<Args extends unknown[], Result>(
 
         limitData.queue.push(actionEntry);
 
-        if (limitData.timer === null) {
-            processQueue();
-            limitData.timer = setInterval(processQueue, rateLimit);
+        if (limitData.nextAllowedAt === 0) {
+            runNext(limitData); // First action of a burst runs synchronously.
+            limitData.rateLimit = rateLimit;
+            limitData.nextAllowedAt = Date.now() + rateLimit;
+            pendingQueues.add(limitData);
         }
+        scheduleNextSlot(); // Also recovers timers cancelled by the runtime.
 
         return promise;
     }

@@ -157,3 +157,18 @@ Message 1
 //500ms later...
 Message 3
 ```
+
+## Runtime notes
+
+Queues with a non-zero `id` are stored in a module-level map, so they are shared
+inside a single JavaScript runtime instance (for example, one Cloudflare Workers
+isolate), not across a whole deployment.
+
+Cloudflare Workers cancels pending timers when a request's I/O context ends. If this
+happens while a shared queue has a timer armed, the queue keeps its pending actions
+and re-arms the timer on the next call to that queue, so subsequent requests are not
+stuck and the backlog drains then.
+
+If you need a rate limit that is global across every isolate, run the queue inside a
+Durable Object and route the calls through it.
+

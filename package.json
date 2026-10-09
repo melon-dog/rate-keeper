@@ -1,11 +1,30 @@
 {
   "name": "rate-keeper",
-  "version": "1.2.4",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "version": "1.2.5",
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
   "scripts": {
-    "build": "tsc",
-    "test": "vitest run"
+    "build": "node scripts/build.mjs",
+    "test": "vitest run",
+    "test:interop": "node scripts/test-interop.mjs",
+    "prepublishOnly": "npm run build && npm test && npm run test:interop"
   },
   "keywords": [
     "Rate",
@@ -19,6 +38,7 @@
     "src"
   ],
   "devDependencies": {
+    "esbuild": "^0.28.2",
     "ts-node": "^10.9.2",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"
@@ -27,6 +47,6 @@
   "homepage": "https://github.com/melon-dog/rate-keeper/blob/main/README.md",
   "repository": {
     "type": "git",
-    "url": "https://github.com/melon-dog/rate-keeper"
+    "url": "git+https://github.com/melon-dog/rate-keeper.git"
   }
 }

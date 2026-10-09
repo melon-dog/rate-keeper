@@ -1,0 +1,27 @@
+// CommonJS type surface for rate-keeper (copied to dist/index.d.cts by
+// scripts/build.mjs). It models the callable `module.exports` shape produced
+// by the interop footer, so Node10/Node16 TypeScript resolves `import`
+// and `require` without an unnecessary `.default` property access.
+import type {
+    CancelablePromise as CancelablePromiseType,
+    QueueSettings as QueueSettingsType,
+} from "./index.js";
+
+declare function RateKeeper<Args extends unknown[], Result>(
+    action: (...args: Args) => Result,
+    rateLimit: number,
+    settings?: QueueSettingsType
+): (...args: Args) => CancelablePromiseType<Result>;
+
+declare namespace RateKeeper {
+    // `import =` keeps the CJS default import working as a namespace.
+    import _default = RateKeeper;
+    export { _default as default };
+
+    export type CancelablePromise<T> = CancelablePromiseType<T>;
+    export type QueueSettings = QueueSettingsType;
+    export type DropPolicy = import("./index.js").DropPolicy;
+    export const DropPolicy: typeof import("./index.js").DropPolicy;
+}
+
+export = RateKeeper;

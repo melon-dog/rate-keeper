@@ -21,6 +21,22 @@ Install the package via npm:
 npm install rate-keeper
 ```
 
+## Module formats
+
+The package ships both a CommonJS build (`require`) and a native ESM build (`import`),
+wired through the package `exports` map:
+
+```javascript
+// Node ESM, bundlers (Vite, esbuild, wrangler, webpack) and TypeScript:
+import RateKeeper, { DropPolicy } from "rate-keeper";
+
+// Node CommonJS (`.default` and `DropPolicy` are also available):
+const RateKeeper = require("rate-keeper");
+```
+
+The default import is invocable directly in every environment; consumers do not need to
+unwrap the module interop by hand.
+
 ## Usage
 
 Existing code.

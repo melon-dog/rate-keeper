@@ -32,11 +32,19 @@ let checks = 0;
 
 /** Runs a command inside the temporary consumer project. */
 function run(command, args, options = {}) {
+    // `npm publish --dry-run` propagates npm_config_dry_run to child npm
+    // processes, which would turn the `npm pack`/`npm install` below into
+    // no-ops. Strip it so the interop tests always exercise real artifacts.
+    const env = { ...process.env };
+    delete env.npm_config_dry_run;
+    delete env.NPM_CONFIG_DRY_RUN;
+
     return execFileSync(command, args, {
         cwd: tempDir,
         encoding: "utf8",
         stdio: ["ignore", "pipe", "pipe"],
         shell: isWindows,
+        env,
         ...options,
     });
 }
@@ -62,6 +70,10 @@ try {
     const packResult = JSON.parse(packOutput);
     const packInfo = Array.isArray(packResult) ? packResult[0] : Object.values(packResult)[0];
     const tarball = join(tempDir, packInfo.filename);
+
+    if (!existsSync(tarball)) {
+        throw new Error(`npm pack did not create ${tarball}.`);
+    }
 
     writeFileSync(
         join(tempDir, "package.json"),

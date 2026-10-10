@@ -35,7 +35,7 @@ type Action = {
 /**
  * @param {number} id A queue identifier; actions in the same queue are rate-limited and executed sequentially, 0 is a reserved value.
  * @param {number} maxQueueSize Optional. Max size of the queue.
- * @param {DropPolicy} dropPolicy Optional. Policy when max size is reached: 'Reject' or 'DropOldest'.
+ * @param {DropPolicy} dropPolicy Optional. Policy when max size is reached: 'Reject' or 'DropOldest'. Defaults to 'Reject' when maxQueueSize is set.
  */
 export interface QueueSettings {
     id: number;
@@ -219,21 +219,26 @@ export interface CancelablePromise<T> extends Promise<T> {
 
 /**
  * @param {(...args: Args) => Result} action The action to be rate-limited.
- * @param {number} rateLimit The minimum interval in milliseconds between each execution.
+ * @param {number} rateLimit The minimum interval in milliseconds between each execution. Must be a finite number >= 0.
  * @param {QueueSettings} settings Optional. Queue settings for rate limiting and execution.
- * @returns {(...args: Args) => CancelablePromise<Result>} An asynchronous function that executes the action and returns a promise with the result and a cancel method.
+ * @returns {(...args: Args) => CancelablePromise<Awaited<Result>>} An asynchronous function that executes the action and returns a promise with the result and a cancel method.
+ * @throws {RangeError} If rateLimit is not a finite number >= 0.
  */
 export default function RateKeeper<Args extends unknown[], Result>(
     action: (...args: Args) => Result,
     rateLimit: number,
     settings: QueueSettings = { id: 0 }
-): (...args: Args) => CancelablePromise<Result> {
+): (...args: Args) => CancelablePromise<Awaited<Result>> {
+    if (!Number.isFinite(rateLimit) || rateLimit < 0) {
+        throw new RangeError(`rateLimit must be a finite number >= 0, received ${rateLimit}.`);
+    }
+
     const limitData = settings.id === 0 ? new LimitData(settings) : getRateData(settings);
 
-    function publicFunc(...args: Args): CancelablePromise<Result> {
+    function publicFunc(...args: Args): CancelablePromise<Awaited<Result>> {
         const { maxQueueSize, dropPolicy } = limitData.settings;
         let resolve: (res: Result) => void;
-        let reject: (reason?: Error) => void;
+        let reject: (reason?: unknown) => void;
 
         const promise = new Promise<Result>((res, rej) => {
             resolve = res;
@@ -241,7 +246,16 @@ export default function RateKeeper<Args extends unknown[], Result>(
         }) as CancelablePromise<Result>;
 
         const actionEntry: Action = {
-            action: () => resolve(action(...args)),
+            action: () => {
+                try {
+                    resolve(action(...args));
+                } catch (error) {
+                    // A throwing action must settle its promise; letting the
+                    // error escape would kill the shared scheduler and hang
+                    // every other queue.
+                    reject(error);
+                }
+            },
             reject: (reason) => { reject(reason); },
             id: settings.id
         };
@@ -253,10 +267,15 @@ export default function RateKeeper<Args extends unknown[], Result>(
         };
 
         if (maxQueueSize !== undefined && limitData.queue.length >= maxQueueSize) {
-            if (dropPolicy === DropPolicy.Reject) {
-                return Promise.reject(new Error(ERRORS.QUEUE_FULL)) as CancelablePromise<Result>;
-            } else if (dropPolicy === DropPolicy.DropOldest) {
+            if (dropPolicy === DropPolicy.DropOldest) {
                 limitData.queue.shift()?.reject(new Error(ERRORS.QUEUE_FULL));
+            } else {
+                // Default policy (also DropPolicy.Reject): reject the new call
+                // instead of silently queueing past the bound. The action never
+                // enters the queue, so cancel() is a no-op.
+                const rejected = Promise.reject(new Error(ERRORS.QUEUE_FULL)) as CancelablePromise<Awaited<Result>>;
+                rejected.cancel = () => { /* The action was never queued. */ };
+                return rejected;
             }
         }
 
@@ -270,7 +289,7 @@ export default function RateKeeper<Args extends unknown[], Result>(
         }
         scheduleNextSlot(); // Also recovers timers cancelled by the runtime.
 
-        return promise;
+        return promise as CancelablePromise<Awaited<Result>>;
     }
 
     return publicFunc;

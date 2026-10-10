@@ -11,7 +11,7 @@ declare function RateKeeper<Args extends unknown[], Result>(
     action: (...args: Args) => Result,
     rateLimit: number,
     settings?: QueueSettingsType
-): (...args: Args) => CancelablePromiseType<Result>;
+): (...args: Args) => CancelablePromiseType<Awaited<Result>>;
 
 declare namespace RateKeeper {
     // `import =` keeps the CJS default import working as a namespace.
